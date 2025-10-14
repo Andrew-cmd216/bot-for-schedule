@@ -4,6 +4,22 @@ from google.oauth2.service_account import Credentials
 from pathlib import Path
 
 
+class Schedule:
+    def get_monday(self):
+        pass
+    def get_tuesday(self):
+        pass
+    def get_wendsday(self):
+        pass
+    def get_thursday(self):
+        pass
+    def get_friday(self):
+        pass
+    def get_saturday(self):
+        pass
+
+
+
 PROJECT_PATH = Path(__file__).parent
 CREDENTIALS_PATH = PROJECT_PATH / 'Credential' / 'Credentials.json'
 
