@@ -16,7 +16,7 @@ class Schedule:
     def get_friday(self):
         return 'пятница'
     def get_saturday(self):
-        return 'суббота'
+        return 'суббота1'
 
 
 
