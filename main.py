@@ -41,7 +41,3 @@ client = gspread.authorize(creds)
 
 # Open the spreadsheet
 sheet = client.open('кадабра1').sheet1
-
-data = sheet.get_values()
-df = pd.DataFrame(data)
-print(df)
