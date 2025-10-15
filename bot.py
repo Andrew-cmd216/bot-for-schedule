@@ -1,4 +1,5 @@
 import telebot
+import main
 from telebot import types
 bot = telebot.TeleBot('8256246268:AAEeYE3pzceAoGn2MeAIqxw8apMaytwEfbw')
 
@@ -27,16 +28,16 @@ def get_day(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     if call.data == 'понедельник':
-        bot.send_message(call.message.chat.id, 'понедельник')
+        bot.send_message(call.message.chat.id, main.Schedule.get_monday(1))
     elif call.data == 'вторник':
-        bot.send_message(call.message.chat.id, 'вторник')
+        bot.send_message(call.message.chat.id, main.Schedule.get_tuesday(1))
     elif call.data == 'среда':
-        bot.send_message(call.message.chat.id, 'среда')
+        bot.send_message(call.message.chat.id, main.Schedule.get_wednesday(1))
     elif call.data == 'четверг':
-        bot.send_message(call.message.chat.id, 'четверг')
+        bot.send_message(call.message.chat.id, main.Schedule.get_thursday(1))
     elif call.data == 'пятница':
-        bot.send_message(call.message.chat.id, 'пятница')
+        bot.send_message(call.message.chat.id, main.Schedule.get_friday(1))
     elif call.data == 'суббота':
-        bot.send_message(call.message.chat.id, 'суббота')
+        bot.send_message(call.message.chat.id, main.Schedule.get_saturday(1))
 
 bot.polling(none_stop=True, interval=0)
