@@ -6,17 +6,17 @@ from pathlib import Path
 
 class Schedule:
     def get_monday(self):
-        pass
+        return 'понедельник'
     def get_tuesday(self):
-        pass
-    def get_wendsday(self):
-        pass
+        return 'вторник'
+    def get_wednesday(self):
+        return 'среда'
     def get_thursday(self):
-        pass
+        return 'четверг'
     def get_friday(self):
-        pass
+        return 'пятница'
     def get_saturday(self):
-        pass
+        return 'суббота'
 
 
 
