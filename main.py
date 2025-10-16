@@ -33,7 +33,7 @@ class DayOfTheWeek:
     def transform_data(self, group_id: int):
         table = self.get_data(group_id)
         table = table.rename(columns={3:'Время', 14:'Предмет', 15:'Ауд.', 16:'Корпус'})
-        if table['Ауд.'].any:
+        if table.iloc[2].any:
             table['Ауд.'] = table['Ауд.'].str.replace("\n", " ")
         table['Предмет'] = table['Предмет'].str.replace("-", "")
         table = table.to_dict()
@@ -41,8 +41,12 @@ class DayOfTheWeek:
         table_final = []
         for ind in (table_new[0].keys()):
             table_not_yet_final = []
-            for diction in (table_new):
+            for diction in table_new:
+                if len(table_new[1][ind]) == 0:
+                    break
                 table_not_yet_final.append(diction[ind])
+            if table_not_yet_final:
+                table_not_yet_final[0] = f'*{table_not_yet_final[0]}*\n'
             table_final.append(' '.join(table_not_yet_final))
         table_final = '\n\n\n'.join(table_final)
         self.table = table_final

@@ -41,20 +41,20 @@ def callback_worker(call):
     elif call.data in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
         group = user_groups.get(user_id)
         if not group:
-            bot.send_message(call.message.chat.id, "Пожалуйста, сначала выбери группу.")
+            bot.send_message(call.message.chat.id, "Пожалуйста, сначала выбери группу.", parse_mode='Markdown')
             get_group(call.message)
             return
         if call.data == 'Понедельник':
-            bot.send_message(call.message.chat.id, schedule.get_monday(group))
+            bot.send_message(call.message.chat.id, schedule.get_monday(group), parse_mode='Markdown')
         elif call.data == 'Вторник':
-            bot.send_message(call.message.chat.id, schedule.get_tuesday(group))
+            bot.send_message(call.message.chat.id, schedule.get_tuesday(group), parse_mode='Markdown')
         elif call.data == 'Среда':
-            bot.send_message(call.message.chat.id, schedule.get_wednesday(group))
+            bot.send_message(call.message.chat.id, schedule.get_wednesday(group), parse_mode='Markdown')
         elif call.data == 'Четверг':
-            bot.send_message(call.message.chat.id, schedule.get_thursday(group))
+            bot.send_message(call.message.chat.id, schedule.get_thursday(group), parse_mode='Markdown')
         elif call.data == 'Пятница':
-            bot.send_message(call.message.chat.id, schedule.get_friday(group))
+            bot.send_message(call.message.chat.id, schedule.get_friday(group), parse_mode='Markdown')
         elif call.data == 'Суббота':
-            bot.send_message(call.message.chat.id, schedule.get_saturday(group))
+            bot.send_message(call.message.chat.id, schedule.get_saturday(group), parse_mode='Markdown')
 
 bot.polling(none_stop=True, interval=0)
