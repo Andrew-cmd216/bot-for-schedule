@@ -2,6 +2,7 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from pathlib import Path
+from tabulate import tabulate
 
 
 def make_req() -> pd.DataFrame:
