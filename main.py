@@ -2,6 +2,8 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from pathlib import Path
+from tabulate import tabulate
+
 
 def make_req() -> pd.DataFrame:
     '''Function called for accessing specific data from the table'''
@@ -17,15 +19,30 @@ class DayOfTheWeek:
         self.subset = subset
     def get_data(self, group_id: int) -> pd.DataFrame:
         if group_id == 1:
-            table = self.subset.iloc[:, 2:4].join(self.subset.iloc[:, 14:17])
+            table = self.subset.iloc[:, 3:4].join(self.subset.iloc[:, 14:17])
         else:
-            table = self.subset.iloc[:, 2:4].join(self.subset.iloc[:, 18:21])
+            table = self.subset.iloc[:, 3:4].join(self.subset.iloc[:, 18:21])
         table = table.replace({"К": "ул. Костина 2Б",
                                'Л': 'ул. Львовская 1В',
                                'БП': 'ул. Большая Печёрская 25/12',
                                'Р': 'ул. Родионова 136',
                                "С": "Сормовское шоссе 30"})
         return table
+
+    def transform_data(self, group_id: int):
+        table = self.get_data(group_id)
+        table = table.rename(columns={3:'Время', 14:'Предмет', 15:'Ауд.', 16:'Корпус'})
+        table['Предмет'] = table['Предмет'].str.replace("\n", " ").str.replace("-", "")
+        table = table.to_dict()
+        table_new = [x for x in table.values()]
+        table_final = []
+        for ind in (table_new[0].keys()):
+            table_not_yet_final = []
+            for diction in (table_new):
+                table_not_yet_final.append(diction[ind])
+            table_final.append(' '.join(table_not_yet_final))
+        table_final = '\n'.join(table_final)
+        return table_final
 
 
 class Schedule:
@@ -86,7 +103,7 @@ class Schedule:
         self._make_saturday()
 
     def get_monday(self, group_id: int):
-        return str(self._monday.get_data(group_id))
+        return self._monday.transform_data(group_id)
     def get_tuesday(self, group_id: int):
         return str(self._tuesday.get_data(group_id))
     def get_wednesday(self, group_id: int):
@@ -121,3 +138,5 @@ client = gspread.authorize(creds)
 # Open the spreadsheet
 schedule = Schedule()
 schedule.organise()
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    print(schedule.get_monday(1))
