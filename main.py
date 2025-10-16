@@ -33,7 +33,9 @@ class DayOfTheWeek:
     def transform_data(self, group_id: int):
         table = self.get_data(group_id)
         table = table.rename(columns={3:'Время', 14:'Предмет', 15:'Ауд.', 16:'Корпус'})
-        table['Предмет'] = table['Предмет'].str.replace("\n", " ").str.replace("-", "")
+        if table['Ауд.'].any:
+            table['Ауд.'] = table['Ауд.'].str.replace("\n", " ")
+        table['Предмет'] = table['Предмет'].str.replace("-", "")
         table = table.to_dict()
         table_new = [x for x in table.values()]
         table_final = []
@@ -42,7 +44,7 @@ class DayOfTheWeek:
             for diction in (table_new):
                 table_not_yet_final.append(diction[ind])
             table_final.append(' '.join(table_not_yet_final))
-        table_final = '\n'.join(table_final)
+        table_final = '\n\n\n'.join(table_final)
         self.table = table_final
 
 class Schedule:
