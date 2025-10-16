@@ -11,10 +11,11 @@ def make_req() -> pd.DataFrame:
     return df
 
 class DayOfTheWeek:
+    """Class that stores the info of the day of the week"""
     def __init__(self,
                  subset: pd.DataFrame):
         self.subset = subset
-    def get_data(self, group_id: int):
+    def get_data(self, group_id: int) -> pd.DataFrame:
         if group_id == 1:
             table = self.subset.iloc[:, 2:4].join(self.subset.iloc[:, 14:17])
         else:
@@ -120,10 +121,3 @@ client = gspread.authorize(creds)
 # Open the spreadsheet
 schedule = Schedule()
 schedule.organise()
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(schedule.get_monday(1))
-    print(schedule.get_tuesday(1))
-    print(schedule.get_wednesday(1))
-    print(schedule.get_thursday(1))
-    print(schedule.get_friday(1))
-    print(schedule.get_saturday(1))
