@@ -17,6 +17,7 @@ class DayOfTheWeek:
     def __init__(self,
                  subset: pd.DataFrame):
         self.subset = subset
+        self.table = None
     def get_data(self, group_id: int) -> pd.DataFrame:
         if group_id == 1:
             table = self.subset.iloc[:, 3:4].join(self.subset.iloc[:, 14:17])
@@ -42,8 +43,7 @@ class DayOfTheWeek:
                 table_not_yet_final.append(diction[ind])
             table_final.append(' '.join(table_not_yet_final))
         table_final = '\n'.join(table_final)
-        return table_final
-
+        self.table = table_final
 
 class Schedule:
     '''Class responsible for parsing the table and organising the data in groups'''
@@ -103,17 +103,23 @@ class Schedule:
         self._make_saturday()
 
     def get_monday(self, group_id: int):
-        return self._monday.transform_data(group_id)
+        self._monday.transform_data(group_id)
+        return self._monday.table
     def get_tuesday(self, group_id: int):
-        return str(self._tuesday.get_data(group_id))
+        self._tuesday.transform_data(group_id)
+        return self._tuesday.table
     def get_wednesday(self, group_id: int):
-        return str(self._wednesday.get_data(group_id))
+        self._wednesday.transform_data(group_id)
+        return self._wednesday.table
     def get_thursday(self, group_id: int):
-        return str(self._thursday.get_data(group_id))
+        self._thursday.transform_data(group_id)
+        return self._thursday.table
     def get_friday(self, group_id: int):
-        return str(self._friday.get_data(group_id))
+        self._friday.transform_data(group_id)
+        return self._friday.table
     def get_saturday(self, group_id: int):
-        return str(self._saturday.get_data(group_id))
+        self._saturday.transform_data(group_id)
+        return self._saturday.table
 
 
 
@@ -138,5 +144,3 @@ client = gspread.authorize(creds)
 # Open the spreadsheet
 schedule = Schedule()
 schedule.organise()
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(schedule.get_monday(1))
