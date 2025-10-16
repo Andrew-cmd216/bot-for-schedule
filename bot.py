@@ -3,41 +3,58 @@ import main
 from telebot import types
 bot = telebot.TeleBot('8256246268:AAEeYE3pzceAoGn2MeAIqxw8apMaytwEfbw')
 
+schedule = main.Schedule()
+schedule.organise()
+
+user_groups = {}
+
 @bot.message_handler(content_types=['text'])
 def start(message):
     if message.text:
-        get_day(message)
+        get_group(message)
+
+def get_group(message):
+    keybord = types.InlineKeyboardMarkup()
+    key_first = types.InlineKeyboardButton(text='23ФПЛ-1', callback_data='group_1')
+    keybord.add(key_first)
+    key_second = types.InlineKeyboardButton(text='23ФПЛ-2', callback_data='group_2')
+    keybord.add(key_second)
+    text = 'Из какой ты группы'
+    bot.send_message(message.from_user.id, text=text, reply_markup=keybord)
 
 def get_day(message):
     keyboard = types.InlineKeyboardMarkup()
-    key_monday = types.InlineKeyboardButton(text='Понедельник', callback_data='понедельник')
-    keyboard.add(key_monday)
-    key_tuesday = types.InlineKeyboardButton(text='Вторник', callback_data='вторник')
-    keyboard.add(key_tuesday)
-    key_wednesday = types.InlineKeyboardButton(text='Среда', callback_data='среда')
-    keyboard.add(key_wednesday)
-    key_thursday = types.InlineKeyboardButton(text='Четверг', callback_data='четверг')
-    keyboard.add(key_thursday)
-    key_friday = types.InlineKeyboardButton(text='Пятница', callback_data='пятница')
-    keyboard.add(key_friday)
-    key_saturday = types.InlineKeyboardButton(text='Суббота', callback_data='суббота')
-    keyboard.add(key_saturday)
+    days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
+    for day in days:
+        keyboard.add(types.InlineKeyboardButton(text=day, callback_data=day))
     text = 'Выбери день недели'
-    bot.send_message(message.from_user.id, text=text, reply_markup=keyboard)
+    bot.send_message(message, text=text, reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
-    if call.data == 'понедельник':
-        bot.send_message(call.message.chat.id, main.Schedule.get_monday(1))
-    elif call.data == 'вторник':
-        bot.send_message(call.message.chat.id, main.Schedule.get_tuesday(1))
-    elif call.data == 'среда':
-        bot.send_message(call.message.chat.id, main.Schedule.get_wednesday(1))
-    elif call.data == 'четверг':
-        bot.send_message(call.message.chat.id, main.Schedule.get_thursday(1))
-    elif call.data == 'пятница':
-        bot.send_message(call.message.chat.id, main.Schedule.get_friday(1))
-    elif call.data == 'суббота':
-        bot.send_message(call.message.chat.id, main.Schedule.get_saturday(1))
+    user_id = call.from_user.id
+
+    if call.data in ['group_1', 'group_2']:
+        user_groups[user_id] = 1 if call.data == 'group_1' else 2
+        get_day(call.message.chat.id)
+
+    elif call.data in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
+        group = user_groups.get(user_id)
+        if not group:
+            bot.send_message(call.message.chat.id, "Пожалуйста, сначала выбери группу.")
+            get_group(call.message)
+            return
+        if call.data == 'Понедельник':
+            bot.send_message(call.message.chat.id, schedule.get_monday(group))
+        elif call.data == 'Вторник':
+            bot.send_message(call.message.chat.id, schedule.get_tuesday(group))
+        elif call.data == 'Среда':
+            bot.send_message(call.message.chat.id, schedule.get_wednesday(group))
+        elif call.data == 'Четверг':
+            bot.send_message(call.message.chat.id, schedule.get_thursday(group))
+        elif call.data == 'Пятница':
+            bot.send_message(call.message.chat.id, schedule.get_friday(group))
+        elif call.data == 'Суббота':
+            bot.send_message(call.message.chat.id, schedule.get_saturday(group))
 
 bot.polling(none_stop=True, interval=0)
