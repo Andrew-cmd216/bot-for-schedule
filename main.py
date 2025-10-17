@@ -2,7 +2,8 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from pathlib import Path
-from tabulate import tabulate
+import re
+import itertools
 
 
 def make_req() -> pd.DataFrame:
@@ -32,24 +33,55 @@ class DayOfTheWeek:
 
     def transform_data(self, group_id: int):
         table = self.get_data(group_id)
-        table = table.rename(columns={3:'Время', 14:'Предмет', 15:'Ауд.', 16:'Корпус'})
-        if table.iloc[2].any:
-            table['Ауд.'] = table['Ауд.'].str.replace("\n", " ")
+        if group_id == 1:
+            table = table.rename(columns={3: 'Время', 14: 'Предмет', 15: 'Ауд.', 16: 'Корпус'})
+        elif group_id == 2:
+            table = table.rename(columns={3: 'Время', 18: 'Предмет', 19: 'Ауд.', 20: 'Корпус'})
+        if table['Ауд.'].any:
+            table['Ауд.'] = table['Ауд.'].str.replace("\n+", "\n", regex=True)
+        table['Предмет'] = table['Предмет'].str.replace("-\n", "")
         table['Предмет'] = table['Предмет'].str.replace("-", "")
+        table['Предмет'] = table['Предмет'].str.replace(r'\n$', "", regex=True)
+        table['Предмет'] = table['Предмет'].str.replace(r"(?<=\d)(?=\n)", ' ', regex=True)
         table = table.to_dict()
         table_new = [x for x in table.values()]
         table_final = []
         for ind in (table_new[0].keys()):
             table_not_yet_final = []
-            for diction in table_new:
+            for diction in (table_new):
                 if len(table_new[1][ind]) == 0:
                     break
                 table_not_yet_final.append(diction[ind])
             if table_not_yet_final:
-                table_not_yet_final[0] = f'*{table_not_yet_final[0]}*\n'
-            table_final.append(' '.join(table_not_yet_final))
+                table_not_yet_final[0] = f'*{table_not_yet_final[0]}*'
+                subj = table_not_yet_final[1]
+                sequence = subj.split('\n')[:]
+                multi_sched = []
+                multi_pairs = [sequence.index(x) for x in sequence
+                               if re.search(r'лекц|семин|язык', x)]
+                multi_pairs_final = []
+                for data_from_subj_id in reversed(multi_pairs):
+                    multi_pairs_final.append('\n'.join(sequence[data_from_subj_id:]))
+                    del sequence[data_from_subj_id::]
+                multi_aud = table_not_yet_final[2].split(('\n'))
+                if len(multi_pairs_final) > 1:
+                    if len(multi_aud) > 1:
+                        for i in range(len(multi_pairs)):
+                            multi_sched.append(multi_pairs_final[i] + f'\n*{multi_aud[i]}*\n')
+                    else:
+                        for i in range(len(multi_pairs)):
+                            multi_sched.append(multi_pairs_final[i] + f'\n*{multi_aud[0]}*\n')
+                    multi_sched = '\n'.join(multi_sched)
+                    multi_sched = multi_sched[:-1]
+                    table_not_yet_final[1] = multi_sched
+                    table_not_yet_final.pop(2)
+                else:
+                    if table_not_yet_final[2]:
+                        table_not_yet_final[2] = f'*{table_not_yet_final[2]}*'
+                table_final.append('\n'.join(table_not_yet_final))
         table_final = '\n\n\n'.join(table_final)
         self.table = table_final
+
 
 class Schedule:
     '''Class responsible for parsing the table and organising the data in groups'''
@@ -150,3 +182,5 @@ client = gspread.authorize(creds)
 # Open the spreadsheet
 schedule = Schedule()
 schedule.organise()
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    print(schedule.get_friday(1))
