@@ -61,23 +61,28 @@ class DayOfTheWeek:
                                if re.search(r'лекц|семин|язык', x)]
                 multi_pairs_final = []
                 for data_from_subj_id in reversed(multi_pairs):
-                    multi_pairs_final.append('\n'.join(sequence[data_from_subj_id:]))
+                    sentence = '\n'.join(sequence[data_from_subj_id:])
+                    if sentence.endswith('\n'):
+                        sentence = sentence[:-1]
+                    multi_pairs_final.append(sentence)
                     del sequence[data_from_subj_id::]
                 multi_aud = table_not_yet_final[2].split(('\n'))
                 if len(multi_pairs_final) > 1:
                     if len(multi_aud) > 1:
                         for i in range(len(multi_pairs)):
-                            multi_sched.append(multi_pairs_final[i] + f'\n*{multi_aud[i]}*\n')
+                            multi_sched.append(multi_pairs_final[i] + f'\n*Ауд.{multi_aud[i]}\n{table_not_yet_final[3]}*\n')
                     else:
                         for i in range(len(multi_pairs)):
-                            multi_sched.append(multi_pairs_final[i] + f'\n*{multi_aud[0]}*\n')
+                            multi_sched.append(multi_pairs_final[i] + f'\n*Ауд.{multi_aud[0]}\n{table_not_yet_final[3]}*\n')
                     multi_sched = '\n'.join(multi_sched)
                     multi_sched = multi_sched[:-1]
                     table_not_yet_final[1] = multi_sched
-                    table_not_yet_final.pop(2)
+                    del table_not_yet_final[2:4]
                 else:
                     if table_not_yet_final[2]:
-                        table_not_yet_final[2] = f'*{table_not_yet_final[2]}*'
+                        table_not_yet_final[2] = f'*Ауд.{table_not_yet_final[2]}*'
+                    if table_not_yet_final[3]:
+                        table_not_yet_final[3] = f'*{table_not_yet_final[3]}*'
                 table_final.append('\n'.join(table_not_yet_final))
         table_final = '\n\n\n'.join(table_final)
         self.table = table_final
@@ -182,5 +187,3 @@ client = gspread.authorize(creds)
 # Open the spreadsheet
 schedule = Schedule()
 schedule.organise()
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(schedule.get_friday(1))
