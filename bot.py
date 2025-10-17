@@ -6,6 +6,7 @@ bot = telebot.TeleBot('8256246268:AAEeYE3pzceAoGn2MeAIqxw8apMaytwEfbw')
 schedule = main.Schedule()
 schedule.organise()
 
+# Dictionary that stores the selected group for each user
 user_groups = {}
 
 @bot.message_handler(content_types=['text'])
@@ -55,19 +56,22 @@ def callback_worker(call):
 
     user_id = call.from_user.id
 
+    # Group selection
     if call.data in ['group_1', 'group_2']:
         user_groups[user_id] = 1 if call.data == 'group_1' else 2
         get_day(call.message.chat.id)
 
+    # Back to group selection
     elif call.data == 'back_to_group':
         get_group(user_id)
-
+    # Day selection
     elif call.data in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
         group = user_groups.get(user_id)
         if not group:
             bot.send_message(call.message.chat.id, "Пожалуйста, сначала выбери группу.", parse_mode='Markdown')
             get_group(call.message)
             return
+        # Get schedule text based on day and group
         if call.data == 'Понедельник':
             text = schedule.get_monday(group)
         elif call.data == 'Вторник':
@@ -81,7 +85,9 @@ def callback_worker(call):
         elif call.data == 'Суббота':
             text = schedule.get_saturday(group)
 
+        # Send schedule
         bot.send_message(call.message.chat.id, text, parse_mode='Markdown')
+        # Show "Back to group selection" button
         get_back_button(call.message.chat.id)
 
 bot.polling(none_stop=True, interval=0)
