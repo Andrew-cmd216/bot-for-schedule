@@ -71,6 +71,8 @@ def callback_worker(call):
             bot.send_message(call.message.chat.id, "Пожалуйста, сначала выбери группу.", parse_mode='Markdown')
             get_group(call.message)
             return
+        # Save the name of day of the week
+        day_name = call.data
         # Get schedule text based on day and group
         if call.data == 'Понедельник':
             text = schedule.get_monday(group)
@@ -86,7 +88,8 @@ def callback_worker(call):
             text = schedule.get_saturday(group)
 
         # Send schedule
-        bot.send_message(call.message.chat.id, text, parse_mode='Markdown')
+        formatted_text = f"*{day_name}*\n{text}"
+        bot.send_message(call.message.chat.id, formatted_text, parse_mode='Markdown')
         # Show "Back to group selection" button
         get_back_button(call.message.chat.id)
 
