@@ -24,11 +24,17 @@ def get_group(message):
 
 def get_day(message):
     keyboard = types.InlineKeyboardMarkup()
-    days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Вернуться к выбору группы']
+    days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
     for day in days:
         keyboard.add(types.InlineKeyboardButton(text=day, callback_data=day))
     text = 'Выбери день недели'
+    keyboard.add(types.InlineKeyboardButton(text='Вернуться к выбору группы', callback_data='back_to_group'))
     bot.send_message(message, text=text, reply_markup=keyboard)
+
+def get_back_button(message):
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.add(types.InlineKeyboardButton(text='Вернуться к выбору группы', callback_data='back_to_group'))
+    bot.send_message(message, text='Вернуться в начало', reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
@@ -38,7 +44,7 @@ def callback_worker(call):
         user_groups[user_id] = 1 if call.data == 'group_1' else 2
         get_day(call.message.chat.id)
 
-    elif call.data == 'Вернуться к выбору группы':
+    elif call.data == 'back_to_group':
         get_group(user_id)
 
     elif call.data in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
@@ -61,5 +67,6 @@ def callback_worker(call):
             text = schedule.get_saturday(group)
 
         bot.send_message(call.message.chat.id, text, parse_mode='Markdown')
+        get_back_button(call.message.chat.id)
 
 bot.polling(none_stop=True, interval=0)
