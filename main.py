@@ -3,36 +3,46 @@ import gspread
 from google.oauth2.service_account import Credentials
 from pathlib import Path
 import re
-import itertools
 
 
 def make_req() -> pd.DataFrame:
+
     '''Function called for accessing specific data from the table'''
+
     sheet = client.open('кадабра1').get_worksheet(2)
     data = sheet.get_values()
     df = pd.DataFrame(data)
     return df
 
 class DayOfTheWeek:
-    """Class that stores the info of the day of the week"""
+
+    """Class that stores the info of the day of the week (DOTW)"""
+
     def __init__(self,
-                 subset: pd.DataFrame):
-        self.subset = subset
-        self.table = None
-    def get_data(self, group_id: int) -> pd.DataFrame:
+                 subset: pd.DataFrame) -> None:
+        self._subset = subset
+        self._table = None
+
+    def _get_data(self, group_id: int) -> pd.DataFrame:
+
+        """Function that differentiates table data depending on the group number"""
+
         if group_id == 1:
-            table = self.subset.iloc[:, 3:4].join(self.subset.iloc[:, 14:17])
+            table = self._subset.iloc[:, 3:4].join(self._subset.iloc[:, 14:17])
         else:
-            table = self.subset.iloc[:, 3:4].join(self.subset.iloc[:, 18:21])
+            table = self._subset.iloc[:, 3:4].join(self._subset.iloc[:, 18:21])
+        return table
+
+    def transform_data(self, group_id: int) -> None:
+
+        """Function that transforms the input table"""
+
+        table = self._get_data(group_id)
         table = table.replace({"К": "ул. Костина 2Б",
                                'Л': 'ул. Львовская 1В',
                                'БП': 'ул. Большая Печёрская 25/12',
                                'Р': 'ул. Родионова 136',
                                "С": "Сормовское шоссе 30"})
-        return table
-
-    def transform_data(self, group_id: int):
-        table = self.get_data(group_id)
         if group_id == 1:
             table = table.rename(columns={3: 'Время', 14: 'Предмет', 15: 'Ауд.', 16: 'Корпус'})
         elif group_id == 2:
@@ -61,30 +71,41 @@ class DayOfTheWeek:
                                if re.search(r'лекц|семин|язык', x)]
                 multi_pairs_final = []
                 for data_from_subj_id in reversed(multi_pairs):
-                    multi_pairs_final.append('\n'.join(sequence[data_from_subj_id:])[:-1])
+                    sentence = '\n'.join(sequence[data_from_subj_id:])
+                    if sentence.endswith('\n'):
+                        sentence = sentence[:-1]
+                    multi_pairs_final.append(sentence)
                     del sequence[data_from_subj_id::]
                 multi_aud = table_not_yet_final[2].split(('\n'))
                 if len(multi_pairs_final) > 1:
                     if len(multi_aud) > 1:
                         for i in range(len(multi_pairs)):
-                            multi_sched.append(multi_pairs_final[i] + f'\n*Ауд.{multi_aud[i]}*\n')
+                            multi_sched.append(multi_pairs_final[i] + f'\n*Ауд.{multi_aud[i]}\n{table_not_yet_final[3]}*\n')
                     else:
                         for i in range(len(multi_pairs)):
-                            multi_sched.append(multi_pairs_final[i] + f'\n*Ауд.{multi_aud[0]}*\n')
+                            multi_sched.append(multi_pairs_final[i] + f'\n*Ауд.{multi_aud[0]}\n{table_not_yet_final[3]}*\n')
                     multi_sched = '\n'.join(multi_sched)
                     multi_sched = multi_sched[:-1]
                     table_not_yet_final[1] = multi_sched
-                    table_not_yet_final.pop(2)
+                    del table_not_yet_final[2:4]
                 else:
                     if table_not_yet_final[2]:
                         table_not_yet_final[2] = f'*Ауд.{table_not_yet_final[2]}*'
+                    if table_not_yet_final[3]:
+                        table_not_yet_final[3] = f'*{table_not_yet_final[3]}*'
                 table_final.append('\n'.join(table_not_yet_final))
         table_final = '\n\n\n'.join(table_final)
-        self.table = table_final
+        self._table = table_final
 
+    def get_schedule(self) -> str:
+
+        """Function returning schedule in string type"""
+
+        return self._table
 
 class Schedule:
-    '''Class responsible for parsing the table and organising the data in groups'''
+
+    """Class responsible for parsing the table and organising the data depending on the day"""
 
     df: pd.DataFrame
     monday: DayOfTheWeek
@@ -104,33 +125,56 @@ class Schedule:
         self._saturday = None
 
     def fill_the_table(self) -> None:
-        '''Function to fill self.__df'''
+
+        """Function to fill self.__df"""
+
         self.__df = make_req()
-    def _make_monday(self):
+
+    def _make_monday(self) -> None:
+
+        """Create an instance of monday DOTW object"""
+
         monday = DayOfTheWeek(self.__df.iloc[13:20])
         self._monday = monday
 
-    def _make_tuesday(self):
+    def _make_tuesday(self) -> None:
+
+        """Create an instance of tuesday DOTW object"""
+
         tuesday = DayOfTheWeek(self.__df.iloc[22:29])
         self._tuesday = tuesday
 
-    def _make_wednesday(self):
+    def _make_wednesday(self) -> None:
+
+        """Create an instance of wednesday DOTW object"""
+
         wednesday = DayOfTheWeek(self.__df.iloc[31:38])
         self._wednesday = wednesday
 
-    def _make_thursday(self):
+    def _make_thursday(self) -> None:
+
+        """Create an instance of thursday DOTW object"""
+
         thursday = DayOfTheWeek(self.__df.iloc[40:43])
         self._thursday = thursday
 
-    def _make_friday(self):
+    def _make_friday(self) -> None:
+
+        """Create an instance of friday DOTW object"""
+
         friday = DayOfTheWeek(self.__df.iloc[45:52])
         self._friday = friday
 
-    def _make_saturday(self):
+    def _make_saturday(self) -> None:
+
+        """Create an instance of saturday DOTW object"""
+
         saturday = DayOfTheWeek(self.__df.iloc[54:61])
         self._saturday = saturday
 
-    def organise(self):
+    def organise(self) -> None:
+
+        """Fill all the necessary attributes of the Object"""
 
         self.fill_the_table()
         self._make_monday()
@@ -140,26 +184,47 @@ class Schedule:
         self._make_friday()
         self._make_saturday()
 
-    def get_monday(self, group_id: int):
+    def get_monday(self, group_id: int) -> str:
+
+        """Transforms data in monday DOTW object and returns the schedule as a string type"""
+
         self._monday.transform_data(group_id)
-        return self._monday.table
-    def get_tuesday(self, group_id: int):
+        return self._monday.get_schedule()
+
+    def get_tuesday(self, group_id: int) -> str:
+
+        """Transforms data in tuesday DOTW object and returns the schedule as a string type"""
+
         self._tuesday.transform_data(group_id)
-        return self._tuesday.table
-    def get_wednesday(self, group_id: int):
+        return self._tuesday.get_schedule()
+
+    def get_wednesday(self, group_id: int) -> str:
+
+        """Transforms data in wednesday DOTW object and returns the schedule as a string type"""
+
         self._wednesday.transform_data(group_id)
-        return self._wednesday.table
-    def get_thursday(self, group_id: int):
+        return self._wednesday.get_schedule()
+
+    def get_thursday(self, group_id: int) -> str:
+
+        """Transforms data in thursday DOTW object and returns the schedule as a string type"""
+
         self._thursday.transform_data(group_id)
-        return self._thursday.table
-    def get_friday(self, group_id: int):
+        return self._thursday.get_schedule()
+
+    def get_friday(self, group_id: int) -> str:
+
+        """Transforms data in friday DOTW object and returns the schedule as a string type"""
+
         self._friday.transform_data(group_id)
-        return self._friday.table
-    def get_saturday(self, group_id: int):
+        return self._friday.get_schedule()
+
+    def get_saturday(self, group_id: int) -> str:
+
+        """Transforms data in saturday DOTW object and returns the schedule as a string type"""
+
         self._saturday.transform_data(group_id)
-        return self._saturday.table
-
-
+        return self._saturday.get_schedule()
 
 PROJECT_PATH = Path(__file__).parent
 CREDENTIALS_PATH = PROJECT_PATH / 'Credential' / 'Credentials.json'
@@ -170,17 +235,12 @@ scope = [
     'https://www.googleapis.com/auth/drive'
 ]
 
-
 # Add credentials
 creds = Credentials.from_service_account_file(str(CREDENTIALS_PATH), scopes=scope)
-
 
 # Authenticate and create the client
 client = gspread.authorize(creds)
 
-
 # Open the spreadsheet
 schedule = Schedule()
 schedule.organise()
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(schedule.get_wednesday(1))
