@@ -10,10 +10,16 @@ user_groups = {}
 
 @bot.message_handler(content_types=['text'])
 def start(message):
+
+    '''Function that starts the bot and sends group selection menu'''
+
     if message.text:
         get_group(message.chat.id)
 
 def get_group(message):
+
+    '''Function that sends inline buttons for group selection'''
+
     keyboard = types.InlineKeyboardMarkup()
     key_first = types.InlineKeyboardButton(text='23ФПЛ-1', callback_data='group_1')
     keyboard.add(key_first)
@@ -23,6 +29,9 @@ def get_group(message):
     bot.send_message(message, text=text, reply_markup=keyboard)
 
 def get_day(message):
+
+    '''Function that sends inline buttons for day selection'''
+
     keyboard = types.InlineKeyboardMarkup()
     days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
     for day in days:
@@ -32,12 +41,18 @@ def get_day(message):
     bot.send_message(message, text=text, reply_markup=keyboard)
 
 def get_back_button(message):
+
+    '''Function that shows a single "Back to group selection" button '''
+
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(types.InlineKeyboardButton(text='Вернуться к выбору группы', callback_data='back_to_group'))
     bot.send_message(message, text='Вернуться в начало', reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
+
+    '''Function that handles all callback button presses'''
+
     user_id = call.from_user.id
 
     if call.data in ['group_1', 'group_2']:
